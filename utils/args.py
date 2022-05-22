@@ -89,7 +89,7 @@ def get_main_args(strings=None):
     arg("--deep_supr_num", type=non_negative_int, default=2, help="Number of deep supervision heads")
     arg("--res_block", action="store_true", help="Enable residual blocks")
     arg("--filters", nargs="+", help="[Optional] Set U-Net filters", default=None, type=int)
-    arg("--layers", nargs="+", help="[Optional] Set number of MD blocks per encoder level", default=1, type=int)
+    arg("--num_units", nargs="+", help="[Optional] Set number of MD blocks per encoder level", default=1, type=int)
     arg("--mde", action="store_true", help="Enable MD modules in encoder")
     arg("--mdd", action="store_true", help="Enable MD modules in decoder")
     arg("--shape", action="store_true", help="Use shape term in loss")
