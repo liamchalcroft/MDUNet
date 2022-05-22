@@ -179,9 +179,7 @@ class MDUNet(nn.Module):
         self.img_size = img_size
         self.img_size_list = [self.img_size]
         for s in strides:
-            self.img_size_list.append(self.img_size_list[-1] // (s))
-        # self.img_size_list = [img_size // (s**(i+1)) for s,i in zip(strides, range(len(self.filters)))] if img_size is not None else None
-        print(self.img_size_list)
+            self.img_size_list.append([i // (s) for i in self.img_size_list[-1]] if type(s) else self.img_size_list[-1] // (s))
         self.num_units = num_units if type(num_units)==list else [num_units]*len(self.filters)
         self.input_block = self.get_input_block()
         self.downsamples = self.get_downsamples()
