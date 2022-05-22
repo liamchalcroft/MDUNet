@@ -49,7 +49,7 @@ class NNUnet(pl.LightningModule):
         if not self.triton:
             self.learning_rate = args.learning_rate
             loss = LossBraTS if self.args.brats else Loss
-            self.loss = loss(self.args.focal)
+            self.loss = loss(self.args.focal, self.args.shape)
             if self.args.dim == 2:
                 self.tta_flips = [[2], [3], [2, 3]]
             else:

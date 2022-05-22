@@ -91,6 +91,7 @@ def get_main_args(strings=None):
     arg("--layers", nargs="+", help="[Optional] Set number of MD blocks per encoder level", default=1, type=int)
     arg("--mde", action="store_true", help="Enable MD modules in encoder")
     arg("--mdd", action="store_true", help="Enable MD modules in decoder")
+    arg("--shape", action="store_true", help="Use shape term in loss")
     arg(
         "--data2d_dim",
         choices=[2, 3],

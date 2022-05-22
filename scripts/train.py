@@ -32,6 +32,7 @@ parser.add_argument("--epochs", type=int, default=600, help="Number of epochs to
 parser.add_argument("--learning_rate", type=float, default=8e-4, help="Learning rate")
 parser.add_argument("--mde", action="store_true", help="Enable MD modules in encoder")
 parser.add_argument("--mdd", action="store_true", help="Enable MD modules in decoder")
+parser.add_argument("--shape", action="store_true", help="Use shape term in loss")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -52,4 +53,5 @@ if __name__ == "__main__":
     cmd += "--deep_supervision " if args.deep_supervision else ""
     cmd += "--mde " if args.mde else ""
     cmd += "--mdd " if args.mdd else ""
+    cmd += "--shape " if args.shape else ""
     run(cmd, shell=True)
