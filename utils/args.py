@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+from os import makedirs
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
 
 
@@ -173,6 +174,7 @@ def get_main_args(strings=None):
             args.update(config)
             args = Namespace(**args)
 
+    makedirs(f"{args.results}", exist_ok=True)
     with open(f"{args.results}/params.json", "w") as f:
         json.dump(vars(args), f)
 
