@@ -177,9 +177,9 @@ class MDUNet(nn.Module):
         else:
             self.filters = [min(2 ** (5 + i), 320 if spatial_dims == 3 else 512) for i in range(len(strides))]
         self.img_size = img_size
-        self.img_size_list = [self.img_size]
+        self.img_size_list = [len(s[0])*[self.img_size]] if isinstance(s[0], (tuple,list)) else [self.img_size]
         for s in strides:
-            self.img_size_list.append([self.img_size_list[-1] // (si) for si in s] \
+            self.img_size_list.append([sz // (st) for sz,st in zip(self.img_size_list[-1],s)] \
                 if isinstance(s, (tuple,list)) else self.img_size_list[-1] // (s))
         self.num_units = num_units if type(num_units)==list else [num_units]*len(self.filters)
         self.input_block = self.get_input_block()
