@@ -164,7 +164,9 @@ class NNUnet(pl.LightningModule):
             res_block=self.args.res_block,
             trans_bias=True,
             img_size=self.patch_size,
-            num_units=self.args.num_units
+            num_units=self.args.num_units,
+            md_encoder=self.args.md_encoder,
+            md_decoder=self.args.md_decoder,
         )
         print0(f"Filters: {self.model.filters},\nKernels: {kernels}\nStrides: {strides}")
 
