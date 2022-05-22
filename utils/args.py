@@ -90,8 +90,8 @@ def get_main_args(strings=None):
     arg("--res_block", action="store_true", help="Enable residual blocks")
     arg("--filters", nargs="+", help="[Optional] Set U-Net filters", default=None, type=int)
     arg("--num_units", nargs="+", help="[Optional] Set number of MD blocks per encoder level", default=1, type=int)
-    arg("--mde", action="store_true", help="Enable MD modules in encoder")
-    arg("--mdd", action="store_true", help="Enable MD modules in decoder")
+    arg("--md_encoder", action="store_true", help="Enable MD modules in encoder")
+    arg("--md_decoder", action="store_true", help="Enable MD modules in decoder")
     arg("--shape", action="store_true", help="Use shape term in loss")
     arg(
         "--data2d_dim",
