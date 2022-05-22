@@ -17,7 +17,7 @@ import torch.nn as nn
 from torch.nn.functional import interpolate
 
 from monai.networks.blocks.dynunet_block import UnetBasicBlock, UnetOutBlock, UnetResBlock, UnetUpBlock
-from modules import MDBlock
+from nnunet.modules import MDBlock
 
 __all__ = ["MDUNet", "MDUnet", "mdunet"]
 

@@ -14,7 +14,7 @@
 
 import torch.nn as nn
 from monai.losses import DiceCELoss, DiceFocalLoss, DiceLoss, FocalLoss
-from shape import ShapeDistLoss
+from nnunet.shape import ShapeDistLoss
 
 
 class Loss(nn.Module):

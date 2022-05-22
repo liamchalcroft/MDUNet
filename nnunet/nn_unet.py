@@ -22,7 +22,7 @@ from apex.optimizers import FusedAdam, FusedSGD
 from data_loading.data_module import get_data_path, get_test_fnames
 from monai.inferers import sliding_window_inference
 # from monai.networks.nets import DynUNet
-from model import MDUNet as DynUNet
+from nnunet.model import MDUNet as DynUNet
 from monai.optimizers.lr_scheduler import WarmupCosineSchedule
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.special import expit, softmax
