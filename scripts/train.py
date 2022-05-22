@@ -30,6 +30,8 @@ parser.add_argument("--results", type=str, default="/results", help="Path to res
 parser.add_argument("--logname", type=str, default="log", help="Name of dlloger output")
 parser.add_argument("--epochs", type=int, default=600, help="Number of epochs to train")
 parser.add_argument("--learning_rate", type=float, default=8e-4, help="Learning rate")
+parser.add_argument("--mde", action="store_true", help="Enable MD modules in encoder")
+parser.add_argument("--mdd", action="store_true", help="Enable MD modules in decoder")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -48,4 +50,6 @@ if __name__ == "__main__":
     cmd += "--tta " if args.tta else ""
     cmd += "--resume_training " if args.resume_training else ""
     cmd += "--deep_supervision " if args.deep_supervision else ""
+    cmd += "--mde " if args.mde else ""
+    cmd += "--mdd " if args.mdd else ""
     run(cmd, shell=True)
