@@ -43,17 +43,10 @@ class DynUNetSkipLayer(nn.Module):
         self.heads = heads
         self.index = index
 
-    def forward(self, x):
-        # print(downsample)
-        # print(nextout)
-        print('x', x.shape)
+    def forward(self, x, nan=False):
         downout = self.downsample(x)
-        print('downout', downout.shape)
         nextout = self.next_layer(downout)
-        print('nextout', nextout.shape)
-        print('up inputs', nextout.shape, downout.shape)
         upout = self.upsample(nextout, downout)
-        print('upout', upout.shape)
         if self.super_head is not None and self.heads is not None and self.index > 0:
             self.heads[self.index - 1] = self.super_head(upout)
 
@@ -138,6 +131,7 @@ class MDUNet(nn.Module):
         upsample_kernel_size: Sequence[Union[Sequence[int], int]],
         filters: Optional[Sequence[int]] = None,
         dropout: Optional[Union[Tuple, str, float]] = None,
+        path_drop: Optional[Union[Tuple, str, float]] = 0.1,
         norm_name: Union[Tuple, str] = ("INSTANCE", {"affine": True}),
         act_name: Union[Tuple, str] = ("leakyrelu", {"inplace": True, "negative_slope": 0.01}),
         deep_supervision: bool = False,
@@ -145,7 +139,7 @@ class MDUNet(nn.Module):
         res_block: bool = False,
         trans_bias: bool = False,
         img_size: int = None,
-        num_units: Sequence[Union[Sequence[int], int]] = 1,
+        num_units: Sequence[Union[Sequence[int], int]] = 2,
         mlp_ratio: int = 4,
         md_encoder: bool = True,
         md_decoder: bool = False,
@@ -161,6 +155,7 @@ class MDUNet(nn.Module):
         self.norm_name = norm_name
         self.act_name = act_name
         self.dropout = dropout
+        self.path_drop = path_drop
         if md_encoder:
             self.conv_block = MDBlock
         elif res_block:
@@ -177,7 +172,9 @@ class MDUNet(nn.Module):
         else:
             self.filters = [min(2 ** (5 + i), 320 if spatial_dims == 3 else 512) for i in range(len(strides))]
         self.img_size = img_size
-        self.img_size_list = [len(strides[0])*[self.img_size]] if isinstance(strides[0], (tuple,list)) else [self.img_size]
+        self.img_size_list = [len(strides[0])*[self.img_size]] \
+            if isinstance(strides[0], (tuple,list)) \
+                and len(strides[0])!=len(self.img_size) else [self.img_size]
         for s in strides:
             self.img_size_list.append([sz // (st) for sz,st in zip(self.img_size_list[-1],s)] \
                 if isinstance(s, (tuple,list)) else self.img_size_list[-1] // (s))
@@ -214,7 +211,6 @@ class MDUNet(nn.Module):
                 return bottleneck
 
             if superheads is None:
-                # print(index, downsamples, upsamples)
                 next_layer = create_skips(1 + index, downsamples[1:], upsamples[1:], bottleneck)
                 return DynUNetSkipLayer(index, downsample=downsamples[0], upsample=upsamples[0], next_layer=next_layer)
 
@@ -288,6 +284,7 @@ class MDUNet(nn.Module):
             self.filters = filters[: len(self.strides)]
 
     def forward(self, x):
+        print('Start of forward pass')
         out = self.skip_layers(x)
         out = self.output_block(out)
         if self.training and self.deep_supervision:
@@ -295,6 +292,7 @@ class MDUNet(nn.Module):
             for feature_map in self.heads:
                 out_all.append(interpolate(feature_map, out.shape[2:]))
             return torch.stack(out_all, dim=1)
+        print('End of forward pass\n')
         return out
 
     def get_input_block(self):
@@ -342,6 +340,7 @@ class MDUNet(nn.Module):
                 self.num_units[-1],
                 self.dropout if self.dropout is not None else 0.,
                 self.mlp_ratio,
+                self.path_drop,
             )
         else:
             return self.conv_block(
@@ -407,7 +406,8 @@ class MDUNet(nn.Module):
                     "num_units": units,
                     "dropout": self.dropout if self.dropout is not None else 0.,
                     "mlp_ratio": self.mlp_ratio,
-                    "transpose": transpose
+                    "transpose": transpose,
+                    "path_dropout": self.path_drop,
                 }
                 layer = conv_block(**params)
                 layers.append(layer)

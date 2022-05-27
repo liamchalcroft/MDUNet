@@ -113,7 +113,13 @@ class Block(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, x):
+        print('layer scale 1: ', self.layer_scale_1.min(), self.layer_scale_1.mean(), self.layer_scale_1.max())
+        print('layer scale 2: ', self.layer_scale_2.min(), self.layer_scale_2.mean(), self.layer_scale_2.max())
+        with torch.no_grad():
+            print('attn: ', self.attn(self.norm1(x)).min(), self.attn(self.norm1(x)).mean(), self.attn(self.norm1(x)).max())
         x = x + self.drop_path(self.layer_scale_1.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) * self.attn(self.norm1(x)))
+        with torch.no_grad():
+            print('mlp: ', self.mlp(self.norm2(x)).min(), self.mlp(self.norm2(x)).mean(), self.mlp(self.norm2(x)).max())
         x = x + self.drop_path(self.layer_scale_2.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) * self.mlp(self.norm2(x)))
         return x
 
@@ -124,9 +130,10 @@ class OverlapPatchEmbed(nn.Module):
 
     def __init__(self, img_size=224, patch_size=7, stride=4, in_chans=3, embed_dim=768, transpose=False):
         super().__init__()
-        patch_size = patch_size if type(patch_size)==tuple else tuple(3*[img_size])
+        patch_size = patch_size if isinstance(patch_size, (tuple,list)) else tuple(3*[img_size])
         conv = nn.ConvTranspose3d if transpose else nn.Conv3d
-        pad = [p // 2 - 1 for p in patch_size]
+        # pad = [p // 2 - 1 for p in patch_size]
+        pad = [p // 2 for p in patch_size]
         pad = [p if p>=0 else 0 for p in pad]
         self.proj = conv(in_chans, embed_dim, kernel_size=patch_size, stride=stride,
                               padding=tuple(pad))
@@ -188,10 +195,15 @@ class MDBlock(nn.Module):
         B = x.shape[0]
         if x_skip is not None:
             x = torch.cat([x,x_skip], dim=1)
+        print('block in: ', x.min().item(), x.mean().item(), x.max().item())
         x, H, W, D = self.patch_embed(x)
+        print('patch embed: ', x.min().item(), x.mean().item(), x.max().item())
         for blk in self.layers:
             x = blk(x)
+        print('post-layers: ', x.min().item(), x.mean().item(), x.max().item())
         x = x.flatten(2).transpose(1, 2)
         x = self.norm(x)
+        print('norm: ', x.min().item(), x.mean().item(), x.max().item())
         x = x.reshape(B, H, W, D, -1).permute(0, 4, 1, 2, 3).contiguous()
+        print('\n')
         return x

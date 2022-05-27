@@ -34,16 +34,23 @@ parser.add_argument("--learning_rate", type=float, default=8e-4, help="Learning 
 parser.add_argument("--mde", action="store_true", help="Enable MD modules in encoder")
 parser.add_argument("--mdd", action="store_true", help="Enable MD modules in decoder")
 parser.add_argument("--shape", action="store_true", help="Use shape term in loss")
+parser.add_argument("--focal", action="store_true", help="Use focal term in loss")
+parser.add_argument("--batch_size", type=int, default=None, help="Batch size")
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
     path_to_main = os.path.join(dirname(dirname(os.path.realpath(__file__))), "main.py")
     cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt "
     cmd += f"--results {args.results} "
+    cmd += f"--ckpt_store_dir {args.results} "
     cmd += f"--data {args.data} "
     cmd += f"--logname {args.logname} "
     cmd += f"--dim {args.dim} "
-    cmd += f"--batch_size {2 if args.dim == 3 else 64} "
+    if args.batch_size is not None and args.batch_size>0:
+        cmd += f"--batch_size {args.batch_size} "
+    else:
+        cmd += f"--batch_size {2 if args.dim == 3 else 64} "
     cmd += f"--val_batch_size {4 if args.dim == 3 else 64} "
     cmd += f"--fold {args.fold} "
     cmd += f"--gpus {args.gpus} "
@@ -53,7 +60,8 @@ if __name__ == "__main__":
     cmd += "--tta " if args.tta else ""
     cmd += "--resume_training " if args.resume_training else ""
     cmd += "--deep_supervision " if args.deep_supervision else ""
-    cmd += "--mde " if args.mde else ""
-    cmd += "--mdd " if args.mdd else ""
+    cmd += "--md_encoder " if args.mde else ""
+    cmd += "--md_decoder " if args.mdd else ""
     cmd += "--shape " if args.shape else ""
+    cmd += "--focal " if args.focal else ""
     run(cmd, shell=True)

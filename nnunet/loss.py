@@ -26,7 +26,7 @@ class Loss(nn.Module):
             )
         else:
             self.loss_fn = DiceCELoss(include_background=False, softmax=True, to_onehot_y=True, batch=True)
-        self.shape_loss = ShapeDistLoss(include_background=False, softmax=True, to_onehot_y=True, batch=True) if shape else None
+        self.shape_loss = ShapeDistLoss(include_background=False, softmax=True, to_onehot_y=True) if shape else None
 
     def forward(self, y_pred, y_true):
         loss = self.loss_fn(y_pred, y_true)
@@ -40,7 +40,7 @@ class LossBraTS(nn.Module):
         super(LossBraTS, self).__init__()
         self.dice = DiceLoss(sigmoid=True, batch=True)
         self.ce = FocalLoss(gamma=2.0, to_onehot_y=False) if focal else nn.BCEWithLogitsLoss()
-        self.shape_loss = ShapeDistLoss(sigmoid=True, batch=True) if shape else None
+        self.shape_loss = ShapeDistLoss(sigmoid=True) if shape else None
 
     def _loss(self, p, y):
         loss = self.dice(p, y) + self.ce(p, y.float())

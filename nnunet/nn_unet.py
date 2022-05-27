@@ -79,8 +79,13 @@ class NNUnet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         img, lbl = self.get_train_data(batch)
+        # print('img: ', img.min(), img.mean(), img.max())
+        # print('lbl: ', lbl.min(), lbl.max())
         pred = self.model(img)
+        # print('pred: ', pred.min(), pred.mean(), pred.max())
         loss = self.compute_loss(pred, lbl)
+        # print('loss: ', loss)
+        # print()
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -225,7 +230,7 @@ class NNUnet(pl.LightningModule):
         dice_mean = torch.mean(dice)
         if dice_mean >= self.best_mean:
             self.best_mean = dice_mean
-            self.best_mean_dice = dice[:]
+            self.best_mean_dice = dice[:] if len(dice.shape)>0 else dice
             self.best_epoch = self.current_epoch
 
         metrics = {}
