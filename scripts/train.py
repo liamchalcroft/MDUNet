@@ -29,19 +29,26 @@ parser.add_argument("--resume_training", action="store_true", help="Resume train
 parser.add_argument("--data", type=str, default="./data", help="Path to data directory")
 parser.add_argument("--results", type=str, default="./results", help="Path to results directory")
 parser.add_argument("--logname", type=str, default="log", help="Name of dlloger output")
+parser.add_argument("--wandb_project", type=str, default=None, help="Project name for Weights & Biases")
 parser.add_argument("--epochs", type=int, default=600, help="Number of epochs to train")
-parser.add_argument("--learning_rate", type=float, default=8e-4, help="Learning rate")
+parser.add_argument("--learning_rate", type=float, default=2e-4, help="Learning rate")
 parser.add_argument("--mde", action="store_true", help="Enable MD modules in encoder")
 parser.add_argument("--mdd", action="store_true", help="Enable MD modules in decoder")
 parser.add_argument("--shape", action="store_true", help="Use shape term in loss")
 parser.add_argument("--focal", action="store_true", help="Use focal term in loss")
+parser.add_argument("--tb_logs", action="store_true", help="Log training via tensorboard")
+parser.add_argument("--wandb_logs", action="store_true", help="Log training via weights and biases")
 parser.add_argument("--batch_size", type=int, default=None, help="Batch size")
+parser.add_argument("--paste", type=float, default=0., help="Probability to use lesion pasting.")
+parser.add_argument("--skip_first_n_eval", type=int, default=1, help="Skip the evaluation for the first n epochs.")
+parser.add_argument("--val_epochs", type=int, default=0, help="Frequency of validation epochs.")
+
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     path_to_main = os.path.join(dirname(dirname(os.path.realpath(__file__))), "main.py")
-    cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt "
+    cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt --scheduler "
     cmd += f"--results {args.results} "
     cmd += f"--ckpt_store_dir {args.results} "
     cmd += f"--data {args.data} "
@@ -53,9 +60,12 @@ if __name__ == "__main__":
         cmd += f"--batch_size {2 if args.dim == 3 else 64} "
     cmd += f"--val_batch_size {4 if args.dim == 3 else 64} "
     cmd += f"--fold {args.fold} "
+    cmd += f"--skip_first_n_eval {args.skip_first_n_eval} "
+    cmd += f"--val_epochs {args.val_epochs} "
     cmd += f"--gpus {args.gpus} "
     cmd += f"--epochs {args.epochs} "
     cmd += f"--learning_rate {args.learning_rate} "
+    cmd += f"--paste {args.paste} "
     cmd += "--amp " if args.amp else ""
     cmd += "--tta " if args.tta else ""
     cmd += "--resume_training " if args.resume_training else ""
@@ -64,4 +74,7 @@ if __name__ == "__main__":
     cmd += "--md_decoder " if args.mdd else ""
     cmd += "--shape " if args.shape else ""
     cmd += "--focal " if args.focal else ""
+    cmd += "--tb_logs " if args.tb_logs else ""
+    cmd += "--wandb_logs " if args.wandb_logs else ""
+    cmd += f"--wandb_project {args.wandb_project}" if args.wandb_logs else ""
     run(cmd, shell=True)

@@ -16,7 +16,7 @@ import os
 
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary, RichProgressBar
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
 from data_loading.data_module import DataModule
 from nnunet.nn_unet import NNUnet
@@ -51,11 +51,24 @@ if __name__ == "__main__":
         )
     elif args.exec_mode == "train":
         if args.tb_logs:
+            os.makedirs(f"{args.results}/tb_logs", exist_ok=True)
             logger = TensorBoardLogger(
                 save_dir=f"{args.results}/tb_logs",
-                name=f"task={args.task}_dim={args.dim}_fold={args.fold}_precision={16 if args.amp else 32}",
+                name=f"task={args.task}_dim={args.dim}_{args.logname}_fold={args.fold}_precision={16 if args.amp else 32}",
                 default_hp_metric=False,
                 version=0,
+            )
+        if args.wandb_logs:
+            os.makedirs(f"{args.results}/wandb_logs", exist_ok=True)
+            # import wandb
+            # wandb.init(settings=wandb.Settings(start_method="fork"))
+            logger = WandbLogger(
+                save_dir=f"{args.results}/wandb_logs",
+                project=f"{args.wandb_project}",
+                # name=f"task={args.task}_dim={args.dim}_{args.logname}_fold={args.fold}_precision={16 if args.amp else 32}",
+                name=f"{args.logname}_fold={args.fold}",
+                entity='atlas-ploras',
+                # version=0,
             )
         if args.save_ckpt:
             callbacks.append(
@@ -86,6 +99,8 @@ if __name__ == "__main__":
         limit_train_batches=1.0 if args.train_batches == 0 else args.train_batches,
         limit_val_batches=1.0 if args.test_batches == 0 else args.test_batches,
         limit_test_batches=1.0 if args.test_batches == 0 else args.test_batches,
+        check_val_every_n_epoch=args.val_epochs,
+        # detect_anomaly=True
     )
 
     if args.benchmark:

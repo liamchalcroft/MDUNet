@@ -179,6 +179,8 @@ class MDUNet(nn.Module):
             self.img_size_list.append([sz // (st) for sz,st in zip(self.img_size_list[-1],s)] \
                 if isinstance(s, (tuple,list)) else self.img_size_list[-1] // (s))
         self.num_units = num_units if type(num_units)==list else [num_units]*len(self.filters)
+        if type(num_units)!=list:
+            self.num_units[-2] = 2*self.num_units[-2]
         self.input_block = self.get_input_block()
         self.downsamples = self.get_downsamples()
         self.bottleneck = self.get_bottleneck()
@@ -284,7 +286,7 @@ class MDUNet(nn.Module):
             self.filters = filters[: len(self.strides)]
 
     def forward(self, x):
-        print('Start of forward pass')
+        # print('Start of forward pass')
         out = self.skip_layers(x)
         out = self.output_block(out)
         if self.training and self.deep_supervision:
@@ -292,7 +294,7 @@ class MDUNet(nn.Module):
             for feature_map in self.heads:
                 out_all.append(interpolate(feature_map, out.shape[2:]))
             return torch.stack(out_all, dim=1)
-        print('End of forward pass\n')
+        # print('End of forward pass\n')
         return out
 
     def get_input_block(self):

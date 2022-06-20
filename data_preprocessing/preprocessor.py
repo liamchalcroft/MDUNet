@@ -159,15 +159,19 @@ class Preprocessor:
 
     def load_pair(self, pair):
         image = self.load_nifty(pair["image"] if isinstance(pair, dict) else pair)
+        # print(pair['image'])
         image_spacing = self.load_spacing(image)
         image = image.get_fdata().astype(np.float32)
+        # print(image.shape)
         image = self.standardize_layout(image)
+        # print(image.shape)
 
         if self.training:
             label = self.load_nifty(pair["label"]).get_fdata().astype(np.uint8)
             label = self.standardize_layout(label)
         else:
             label = None
+        # print(image.shape, label.shape, image_spacing)
 
         return image, label, image_spacing
 
@@ -262,6 +266,8 @@ class Preprocessor:
     def standardize_layout(data):
         if len(data.shape) == 3:
             data = np.expand_dims(data, 3)
+        elif len(data.shape) == 5:
+            data = data[...,0,:]
         return np.transpose(data, (3, 2, 1, 0))
 
     @staticmethod

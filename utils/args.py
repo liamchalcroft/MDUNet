@@ -53,10 +53,12 @@ def get_main_args(strings=None):
     arg("--gpus", type=non_negative_int, default=1, help="Number of gpus")
     arg("--nodes", type=non_negative_int, default=1, help="Number of nodes")
     arg("--learning_rate", type=float, default=0.0008, help="Learning rate")
-    arg("--gradient_clip_val", type=float, default=0, help="Gradient clipping norm value")
+    arg("--gradient_clip_val", type=float, default=1., help="Gradient clipping norm value")
     arg("--negative_slope", type=float, default=0.01, help="Negative slope for LeakyReLU")
     arg("--tta", action="store_true", help="Enable test time augmentation")
     arg("--tb_logs", action="store_true", help="Log metrics to tensoboard")
+    arg("--wandb_logs", action="store_true", help="Log metrics to Weights & Biases")
+    arg("--wandb_project", type=str, default=None, help="Project name for Weights & Biases")
     arg("--brats", action="store_true", help="Enable BraTS specific training and inference")
     arg("--deep_supervision", action="store_true", help="Enable deep supervision")
     arg("--more_chn", action="store_true", help="Create encoder with more channels")
@@ -68,6 +70,7 @@ def get_main_args(strings=None):
     arg("--nfolds", type=positive_int, default=5, help="Number of cross-validation folds")
     arg("--seed", type=non_negative_int, default=1, help="Random seed")
     arg("--skip_first_n_eval", type=non_negative_int, default=0, help="Skip the evaluation for the first n epochs.")
+    arg("--val_epochs", type=non_negative_int, default=0, help="Frequency of validation epochs.")
     arg("--ckpt_path", type=str, default=None, help="Path for loading checkpoint")
     arg("--ckpt_store_dir", type=str, default="/results", help="Path for saving checkpoint")
     arg("--fold", type=non_negative_int, default=0, help="Fold number")
@@ -93,6 +96,7 @@ def get_main_args(strings=None):
     arg("--md_encoder", action="store_true", help="Enable MD modules in encoder")
     arg("--md_decoder", action="store_true", help="Enable MD modules in decoder")
     arg("--shape", action="store_true", help="Use shape term in loss")
+    arg("--paste", type=float, default=0., help="Probability to use lesion pasting.")
     arg(
         "--data2d_dim",
         choices=[2, 3],

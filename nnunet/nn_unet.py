@@ -46,6 +46,16 @@ class NNUnet(pl.LightningModule):
         self.best_mean, self.best_epoch, self.test_idx = (0,) * 3
         self.start_benchmark = 0
         self.test_imgs = []
+        if args.paste > 0.:
+            self.kernel = torch.zeros(3,3,3)
+            self.kernel[1,1,1] = 0.4
+            self.kernel[1,1,0] = 0.1
+            self.kernel[0,1,1] = 0.1
+            self.kernel[1,1,2] = 0.1
+            self.kernel[2,1,1] = 0.1
+            self.kernel[1,2,1] = 0.1
+            self.kernel[1,0,1] = 0.1
+            self.kernel = self.kernel[None][None]
         if not self.triton:
             self.learning_rate = args.learning_rate
             loss = LossBraTS if self.args.brats else Loss
@@ -79,14 +89,26 @@ class NNUnet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         img, lbl = self.get_train_data(batch)
-        # print('img: ', img.min(), img.mean(), img.max())
-        # print('lbl: ', lbl.min(), lbl.max())
         pred = self.model(img)
-        # print('pred: ', pred.min(), pred.mean(), pred.max())
         loss = self.compute_loss(pred, lbl)
-        # print('loss: ', loss)
-        # print()
+        self.log('train/loss', loss)
         return loss
+
+    def lesion_paste(self, img, lbl):
+        if torch.rand(1).item() < self.args.paste:
+            lbl_type = lbl.dtype
+            self.kernel = self.kernel.to(img.device)
+            self.kernel = self.kernel.to(img.dtype)
+            lbl = lbl.to(img.dtype)
+            # add line to modify mask with soft boundaries
+            mask = lbl
+            mask = torch.nn.functional.conv3d(mask, self.kernel, padding=1)
+            ix = torch.randperm(lbl.shape[0])
+            img = img * (1-mask[ix]) + img[ix] * mask[ix]
+            lbl = ((lbl * (1-mask[ix]) + lbl[ix] * mask[ix]) > 0.5).to(lbl.dtype)
+            del mask, ix
+            lbl = lbl.to(lbl_type)
+        return img, lbl
 
     def validation_step(self, batch, batch_idx):
         if self.current_epoch < self.args.skip_first_n_eval:
@@ -219,7 +241,7 @@ class NNUnet(pl.LightningModule):
 
     def validation_epoch_end(self, outputs):
         if self.current_epoch < self.args.skip_first_n_eval:
-            self.log("Dice", 0.001 * self.current_epoch)  # To prevent early stopping
+            self.log("dice", 0.001 * self.current_epoch)  # To prevent early stopping
             self.dice.reset()
             return None
 
@@ -243,7 +265,7 @@ class NNUnet(pl.LightningModule):
 
         self.dllogger.log_metrics(step=self.current_epoch, metrics=metrics)
         self.dllogger.flush()
-        if self.args.tb_logs:
+        if self.args.tb_logs or self.args.wandb_logs:
             self.logger.log_metrics(metrics, step=self.current_epoch)
         self.log("dice", metrics["Dice"])
 
@@ -291,6 +313,8 @@ class NNUnet(pl.LightningModule):
         img, lbl = batch["image"], batch["label"]
         if self.args.dim == 2 and self.args.data2d_dim == 3:
             img, lbl = layout_2d(img, lbl)
+        if self.args.paste>0:
+            img, lbl = self.lesion_paste(img, lbl)
         return img, lbl
 
 
