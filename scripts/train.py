@@ -35,6 +35,7 @@ parser.add_argument("--learning_rate", type=float, default=2e-4, help="Learning 
 parser.add_argument("--mde", action="store_true", help="Enable MD modules in encoder")
 parser.add_argument("--mdd", action="store_true", help="Enable MD modules in decoder")
 parser.add_argument("--shape", action="store_true", help="Use shape term in loss")
+parser.add_argument("--scheduler", action="store_true", help="Use learning rate warmup scheduler")
 parser.add_argument("--focal", action="store_true", help="Use focal term in loss")
 parser.add_argument("--tb_logs", action="store_true", help="Log training via tensorboard")
 parser.add_argument("--wandb_logs", action="store_true", help="Log training via weights and biases")
@@ -48,7 +49,7 @@ parser.add_argument("--val_epochs", type=int, default=0, help="Frequency of vali
 if __name__ == "__main__":
     args = parser.parse_args()
     path_to_main = os.path.join(dirname(dirname(os.path.realpath(__file__))), "main.py")
-    cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt --scheduler "
+    cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt "
     cmd += f"--results {args.results} "
     cmd += f"--ckpt_store_dir {args.results} "
     cmd += f"--data {args.data} "
@@ -66,6 +67,7 @@ if __name__ == "__main__":
     cmd += f"--epochs {args.epochs} "
     cmd += f"--learning_rate {args.learning_rate} "
     cmd += f"--paste {args.paste} "
+    cmd += "--scheduler " if args.scheduler else ""
     cmd += "--amp " if args.amp else ""
     cmd += "--tta " if args.tta else ""
     cmd += "--resume_training " if args.resume_training else ""
