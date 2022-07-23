@@ -32,7 +32,11 @@ def get_task_code(args):
 
 
 def get_config_file(args):
-    if args.data != "/data":
+    if args.config:
+        # path = os.path.basename(args.config)
+        task_code = get_task_code(args)
+        path = os.path.join('/home/lchalcroft/mdunet/data', task_code, "config.pkl")
+    elif args.data != "/data":
         path = os.path.join(args.data, "config.pkl")
     else:
         task_code = get_task_code(args)

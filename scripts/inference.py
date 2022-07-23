@@ -27,12 +27,16 @@ parser.add_argument("--batch_size", type=int, default=4, help="Batch size")
 parser.add_argument("--amp", action="store_true", help="Enable automatic mixed precision")
 parser.add_argument("--tta", action="store_true", help="Enable test time augmentation")
 parser.add_argument("--save_preds", action="store_true", help="Save predicted masks")
+parser.add_argument("--results", type=str, default="./results", help="Path to results directory")
+parser.add_argument("--config", type=str, default=None, help="Path to model config")
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     path_to_main = os.path.join(dirname(dirname(os.path.realpath(__file__))), "main.py")
-    cmd = f"python {path_to_main} --exec_mode predict --task {args.task} --gpus 1 "
+    cmd = f"python {path_to_main} --exec_mode predict --task {args.task} --gpus 1 --deep_supervision "
+    cmd += f"--results {args.results} "
+    cmd += f"--config {args.config} "
     cmd += f"--data {args.data} "
     cmd += f"--dim {args.dim} "
     cmd += f"--fold {args.fold} "

@@ -26,7 +26,7 @@ from utils.utils import make_empty_dir, set_cuda_devices, set_granularity, verif
 
 if __name__ == "__main__":
     args = get_main_args()
-    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
+#    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
     set_cuda_devices(args)
     seed_everything(args.seed)
     data_module = DataModule(args)

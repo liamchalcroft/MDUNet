@@ -172,11 +172,11 @@ def get_main_args(strings=None):
         args = parser.parse_args(strings.split())
     else:
         args = parser.parse_args()
-        if args.config is not None:
-            config = json.load(open(args.config, "r"))
-            args = vars(args)
-            args.update(config)
-            args = Namespace(**args)
+        # if args.config is not None:
+        #     config = json.load(open(args.config, "r"))
+        #     args = vars(args)
+        #     args.update(config)
+        #     args = Namespace(**args)
 
     makedirs(f"{args.results}", exist_ok=True)
     with open(f"{args.results}/params.json", "w") as f:
