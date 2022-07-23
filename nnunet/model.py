@@ -294,32 +294,9 @@ class MDUNet(nn.Module):
             for feature_map in self.heads:
                 out_all.append(interpolate(feature_map, out.shape[2:]))
             return torch.stack(out_all, dim=1)
-        # print('End of forward pass\n')
         return out
 
     def get_input_block(self):
-        # if self.md_encoder:
-        #     return self.conv_block(
-        #         self.img_size_list[0],
-        #         self.in_channels,
-        #         self.filters[0],
-        #         self.kernel_size[0],
-        #         self.strides[0],
-        #         self.num_units[0],
-        #         self.dropout if self.dropout is not None else 0.,
-        #         self.mlp_ratio,
-        #     )
-        # else:
-        #     return self.conv_block(
-        #         self.spatial_dims,
-        #         self.in_channels,
-        #         self.filters[0],
-        #         self.kernel_size[0],
-        #         self.strides[0],
-        #         self.norm_name,
-        #         self.act_name,
-        #         dropout=self.dropout,
-        #     )
         return UnetBasicBlock(
                 self.spatial_dims,
                 self.in_channels,
@@ -357,11 +334,13 @@ class MDUNet(nn.Module):
             )
 
     def get_output_block(self, idx: int):
-        return UnetOutBlock(self.spatial_dims, self.filters[idx], self.out_channels, dropout=self.dropout)
+        if self.md_decoder:
+            return UnetOutBlock(self.spatial_dims, 2*self.filters[idx], self.out_channels, dropout=self.dropout)
+        else:
+            return UnetOutBlock(self.spatial_dims, self.filters[idx], self.out_channels, dropout=self.dropout)
 
     def get_downsamples(self):
         inp, out = self.filters[:-2], self.filters[1:-1]
-        # inp, out = self.filters[:-1], self.filters[1:]
         strides, kernel_size = self.strides[1:-1], self.kernel_size[1:-1]
         img_size = self.img_size_list[1:-1] if self.md_encoder else None
         num_units = self.num_units[1:-1] if self.md_encoder else None
@@ -396,12 +375,12 @@ class MDUNet(nn.Module):
     ):
         layers = []
         if md:
-            for img, in_c, out_c, kernel, stride, units in zip(
+            for i, (img, in_c, out_c, kernel, stride, units) in enumerate(zip(
                 img_size, in_channels, out_channels, kernel_size, strides, num_units
-            ):
+            )):
                 params = {
                     "img_size": img,
-                    "in_chans": in_c,
+                    "in_chans": 2*in_c if transpose and i!=0 else in_c,
                     "embed_chans": out_c,
                     "patch_size": kernel,
                     "stride": stride,
