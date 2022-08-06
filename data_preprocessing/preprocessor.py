@@ -92,7 +92,7 @@ class Preprocessor:
 
     def preprocess_pair(self, pair):
         fname = os.path.basename(pair["image"] if isinstance(pair, dict) else pair)
-        pair = pair[:-7]+'_0000.nii.gz'
+        # pair = pair[:-7]+'_0000.nii.gz'
         image, label, image_spacings = self.load_pair(pair)
 
         # Crop foreground and store original shapes.
