@@ -72,6 +72,7 @@ def get_main_args(strings=None):
     arg("--skip_first_n_eval", type=non_negative_int, default=0, help="Skip the evaluation for the first n epochs.")
     arg("--val_epochs", type=non_negative_int, default=0, help="Frequency of validation epochs.")
     arg("--ckpt_path", type=str, default=None, help="Path for loading checkpoint")
+    arg("--weight_path", type=str, default=None, help="Path for loading model weights")
     arg("--ckpt_store_dir", type=str, default="/results", help="Path for saving checkpoint")
     arg("--fold", type=non_negative_int, default=0, help="Fold number")
     arg("--patience", type=positive_int, default=100, help="Early stopping patience")

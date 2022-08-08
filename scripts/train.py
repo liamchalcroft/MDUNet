@@ -43,6 +43,7 @@ parser.add_argument("--batch_size", type=int, default=None, help="Batch size")
 parser.add_argument("--paste", type=float, default=0., help="Probability to use lesion pasting.")
 parser.add_argument("--skip_first_n_eval", type=int, default=1, help="Skip the evaluation for the first n epochs.")
 parser.add_argument("--val_epochs", type=int, default=0, help="Frequency of validation epochs.")
+parser.add_argument("--weight_path", type=str, default=None, help="Path for loading model weights")
 
 
 
@@ -52,6 +53,7 @@ if __name__ == "__main__":
     cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt "
     cmd += f"--results {args.results} "
     cmd += f"--ckpt_store_dir {args.results} "
+    cmd += f"--weight_path {args.weight_path} "
     cmd += f"--data {args.data} "
     cmd += f"--logname {args.logname} "
     cmd += f"--dim {args.dim} "
