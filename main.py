@@ -22,18 +22,22 @@ from data_loading.data_module import DataModule
 from nnunet.nn_unet import NNUnet
 from utils.args import get_main_args
 from utils.logger import LoggingCallback
-from utils.utils import make_empty_dir, set_cuda_devices, set_granularity, verify_ckpt_path
+from utils.utils import (
+    make_empty_dir,
+    set_cuda_devices,
+    set_granularity,
+    verify_ckpt_path,
+)
 
 if __name__ == "__main__":
     args = get_main_args()
-#    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
+    #    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
     set_cuda_devices(args)
     seed_everything(args.seed)
     data_module = DataModule(args)
     data_module.setup()
     ckpt_path = verify_ckpt_path(args)
 
-    
     if args.weight_path is not None:
         model = NNUnet.load_from_checkpoint(args.weight_path, args=args)
     else:
@@ -41,7 +45,9 @@ if __name__ == "__main__":
     callbacks = [RichProgressBar(), ModelSummary(max_depth=2)]
     logger = False
     if args.benchmark:
-        batch_size = args.batch_size if args.exec_mode == "train" else args.val_batch_size
+        batch_size = (
+            args.batch_size if args.exec_mode == "train" else args.val_batch_size
+        )
         filnename = args.logname if args.logname is not None else "perf.json"
         callbacks.append(
             LoggingCallback(
@@ -71,7 +77,7 @@ if __name__ == "__main__":
                 project=f"{args.wandb_project}",
                 # name=f"task={args.task}_dim={args.dim}_{args.logname}_fold={args.fold}_precision={16 if args.amp else 32}",
                 name=f"{args.logname}_fold={args.fold}",
-                entity='atlas-ploras',
+                entity="atlas-ploras",
                 # version=0,
             )
         if args.save_ckpt:
@@ -112,10 +118,14 @@ if __name__ == "__main__":
             trainer.fit(model, train_dataloaders=data_module.train_dataloader())
         else:
             # warmup
-            trainer.test(model, dataloaders=data_module.test_dataloader(), verbose=False)
+            trainer.test(
+                model, dataloaders=data_module.test_dataloader(), verbose=False
+            )
             # benchmark run
             model.start_benchmark = 1
-            trainer.test(model, dataloaders=data_module.test_dataloader(), verbose=False)
+            trainer.test(
+                model, dataloaders=data_module.test_dataloader(), verbose=False
+            )
     elif args.exec_mode == "train":
         trainer.fit(model, datamodule=data_module, ckpt_path=ckpt_path)
     elif args.exec_mode == "evaluate":
@@ -131,4 +141,6 @@ if __name__ == "__main__":
             model.save_dir = save_dir
             make_empty_dir(save_dir)
         model.args = args
-        trainer.test(model, test_dataloaders=data_module.test_dataloader(), ckpt_path=ckpt_path)
+        trainer.test(
+            model, test_dataloaders=data_module.test_dataloader(), ckpt_path=ckpt_path
+        )

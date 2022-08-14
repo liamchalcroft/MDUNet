@@ -21,6 +21,7 @@ import torch.nn as nn
 from apex.optimizers import FusedAdam, FusedSGD
 from data_loading.data_module import get_data_path, get_test_fnames
 from monai.inferers import sliding_window_inference
+
 # from monai.networks.nets import DynUNet
 from nnunet.model import MDUNet as DynUNet
 from monai.optimizers.lr_scheduler import WarmupCosineSchedule
@@ -46,15 +47,15 @@ class NNUnet(pl.LightningModule):
         self.best_mean, self.best_epoch, self.test_idx = (0,) * 3
         self.start_benchmark = 0
         self.test_imgs = []
-        if args.paste > 0.:
-            self.kernel = torch.zeros(3,3,3)
-            self.kernel[1,1,1] = 0.4
-            self.kernel[1,1,0] = 0.1
-            self.kernel[0,1,1] = 0.1
-            self.kernel[1,1,2] = 0.1
-            self.kernel[2,1,1] = 0.1
-            self.kernel[1,2,1] = 0.1
-            self.kernel[1,0,1] = 0.1
+        if args.paste > 0.0:
+            self.kernel = torch.zeros(3, 3, 3)
+            self.kernel[1, 1, 1] = 0.4
+            self.kernel[1, 1, 0] = 0.1
+            self.kernel[0, 1, 1] = 0.1
+            self.kernel[1, 1, 2] = 0.1
+            self.kernel[2, 1, 1] = 0.1
+            self.kernel[1, 2, 1] = 0.1
+            self.kernel[1, 0, 1] = 0.1
             self.kernel = self.kernel[None][None]
         if not self.triton:
             self.learning_rate = args.learning_rate
@@ -82,8 +83,8 @@ class NNUnet(pl.LightningModule):
         if self.args.deep_supervision:
             loss, weights = 0.0, 0.0
             for i in range(preds.shape[1]):
-                loss += self.loss(preds[:, i], label) * 0.5 ** i
-                weights += 0.5 ** i
+                loss += self.loss(preds[:, i], label) * 0.5**i
+                weights += 0.5**i
             return loss / weights
         return self.loss(preds, label)
 
@@ -91,7 +92,7 @@ class NNUnet(pl.LightningModule):
         img, lbl = self.get_train_data(batch)
         pred = self.model(img)
         loss = self.compute_loss(pred, lbl)
-        self.log('train/loss', loss)
+        self.log("train/loss", loss)
         return loss
 
     def lesion_paste(self, img, lbl):
@@ -104,8 +105,8 @@ class NNUnet(pl.LightningModule):
             mask = lbl
             mask = torch.nn.functional.conv3d(mask, self.kernel, padding=1)
             ix = torch.randperm(lbl.shape[0])
-            img = img * (1-mask[ix]) + img[ix] * mask[ix]
-            lbl = ((lbl * (1-mask[ix]) + lbl[ix] * mask[ix]) > 0.5).to(lbl.dtype)
+            img = img * (1 - mask[ix]) + img[ix] * mask[ix]
+            lbl = ((lbl * (1 - mask[ix]) + lbl[ix] * mask[ix]) > 0.5).to(lbl.dtype)
             del mask, ix
             lbl = lbl.to(lbl_type)
         return img, lbl
@@ -118,7 +119,9 @@ class NNUnet(pl.LightningModule):
         loss = self.loss(pred, lbl)
         if self.args.invert_resampled_y:
             meta, lbl = batch["meta"][0].cpu().detach().numpy(), batch["orig_lbl"]
-            pred = nn.functional.interpolate(pred, size=tuple(meta[3]), mode="trilinear", align_corners=True)
+            pred = nn.functional.interpolate(
+                pred, size=tuple(meta[3]), mode="trilinear", align_corners=True
+            )
         self.dice.update(pred, lbl[:, 0], loss)
 
     def test_step(self, batch, batch_idx):
@@ -136,7 +139,13 @@ class NNUnet(pl.LightningModule):
                 resized_pred = np.zeros((n_class, *cropped_shape))
                 for i in range(n_class):
                     resized_pred[i] = resize(
-                        pred[i], cropped_shape, order=3, mode="edge", cval=0, clip=True, anti_aliasing=False
+                        pred[i],
+                        cropped_shape,
+                        order=3,
+                        mode="edge",
+                        cval=0,
+                        clip=True,
+                        anti_aliasing=False,
                     )
                 pred = resized_pred
             final_pred = np.zeros((n_class, *original_shape))
@@ -155,7 +164,8 @@ class NNUnet(pl.LightningModule):
         while True:
             spacing_ratio = [spacing / min(spacings) for spacing in spacings]
             stride = [
-                2 if ratio <= 2 and size >= 2 * self.args.min_fmap else 1 for (ratio, size) in zip(spacing_ratio, sizes)
+                2 if ratio <= 2 and size >= 2 * self.args.min_fmap else 1
+                for (ratio, size) in zip(spacing_ratio, sizes)
             ]
             kernel = [3 if ratio <= 2 else 1 for ratio in spacing_ratio]
             if all(s == 1 for s in stride):
@@ -171,7 +181,13 @@ class NNUnet(pl.LightningModule):
         return config["in_channels"], config["n_class"], kernels, strides, patch_size
 
     def build_nnunet(self):
-        in_channels, out_channels, kernels, strides, self.patch_size = self.get_unet_params()
+        (
+            in_channels,
+            out_channels,
+            kernels,
+            strides,
+            self.patch_size,
+        ) = self.get_unet_params()
         self.n_class = out_channels - 1
         if self.args.brats:
             out_channels = 3
@@ -195,7 +211,9 @@ class NNUnet(pl.LightningModule):
             md_encoder=self.args.md_encoder,
             md_decoder=self.args.md_decoder,
         )
-        print0(f"Filters: {self.model.filters},\nKernels: {kernels}\nStrides: {strides}")
+        print0(
+            f"Filters: {self.model.filters},\nKernels: {kernels}\nStrides: {strides}"
+        )
 
     def do_inference(self, image):
         if self.args.dim == 3:
@@ -252,7 +270,7 @@ class NNUnet(pl.LightningModule):
         dice_mean = torch.mean(dice)
         if dice_mean >= self.best_mean:
             self.best_mean = dice_mean
-            self.best_mean_dice = dice[:] if len(dice.shape)>0 else dice
+            self.best_mean_dice = dice[:] if len(dice.shape) > 0 else dice
             self.best_epoch = self.current_epoch
 
         metrics = {}
@@ -284,8 +302,14 @@ class NNUnet(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = {
-            "sgd": FusedSGD(self.parameters(), lr=self.learning_rate, momentum=self.args.momentum),
-            "adam": FusedAdam(self.parameters(), lr=self.learning_rate, weight_decay=self.args.weight_decay),
+            "sgd": FusedSGD(
+                self.parameters(), lr=self.learning_rate, momentum=self.args.momentum
+            ),
+            "adam": FusedAdam(
+                self.parameters(),
+                lr=self.learning_rate,
+                weight_decay=self.args.weight_decay,
+            ),
         }[self.args.optimizer.lower()]
 
         if self.args.scheduler:
@@ -293,12 +317,17 @@ class NNUnet(pl.LightningModule):
                 "scheduler": WarmupCosineSchedule(
                     optimizer=optimizer,
                     warmup_steps=250,
-                    t_total=self.args.epochs * len(self.trainer.datamodule.train_dataloader()),
+                    t_total=self.args.epochs
+                    * len(self.trainer.datamodule.train_dataloader()),
                 ),
                 "interval": "step",
                 "frequency": 1,
             }
-            return {"optimizer": optimizer, "monitor": "val_loss", "lr_scheduler": scheduler}
+            return {
+                "optimizer": optimizer,
+                "monitor": "val_loss",
+                "lr_scheduler": scheduler,
+            }
         return {"optimizer": optimizer, "monitor": "val_loss"}
 
     def save_mask(self, pred):
@@ -313,7 +342,7 @@ class NNUnet(pl.LightningModule):
         img, lbl = batch["image"], batch["label"]
         if self.args.dim == 2 and self.args.data2d_dim == 3:
             img, lbl = layout_2d(img, lbl)
-        if self.args.paste>0:
+        if self.args.paste > 0:
             img, lbl = self.lesion_paste(img, lbl)
         return img, lbl
 
