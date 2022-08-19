@@ -38,10 +38,10 @@ if __name__ == "__main__":
     data_module.setup()
     ckpt_path = verify_ckpt_path(args)
 
-    if args.weight_path is not None:
-        model = NNUnet.load_from_checkpoint(args.weight_path, args=args)
-    else:
-        model = NNUnet(args)
+    # if args.weight_path is not None:
+    #     model = NNUnet.load_from_checkpoint(args.weight_path, args=args)
+    # else:
+    model = NNUnet(args)
     callbacks = [RichProgressBar(), ModelSummary(max_depth=2)]
     logger = False
     if args.benchmark:
