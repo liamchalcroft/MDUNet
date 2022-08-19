@@ -202,7 +202,7 @@ class NNUnet(pl.LightningModule):
                 drop_rate=0.0,
                 attn_drop_rate=0.0,
                 dropout_path_rate=0.0,
-                use_checkpoint=True,
+                use_checkpoint=False,
             )
         else:
             self.model = DynUNet(
