@@ -16,7 +16,12 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import interpolate
 
-from monai.networks.blocks.dynunet_block import UnetBasicBlock, UnetOutBlock, UnetResBlock, UnetUpBlock
+from monai.networks.blocks.dynunet_block import (
+    UnetBasicBlock,
+    UnetOutBlock,
+    UnetResBlock,
+    UnetUpBlock,
+)
 from nnunet.modules import MDBlock
 
 __all__ = ["MDUNet", "MDUnet", "mdunet"]
@@ -34,7 +39,9 @@ class DynUNetSkipLayer(nn.Module):
 
     heads: Optional[List[torch.Tensor]]
 
-    def __init__(self, index, downsample, upsample, next_layer, heads=None, super_head=None):
+    def __init__(
+        self, index, downsample, upsample, next_layer, heads=None, super_head=None
+    ):
         super().__init__()
         self.downsample = downsample
         self.next_layer = next_layer
@@ -131,9 +138,12 @@ class MDUNet(nn.Module):
         upsample_kernel_size: Sequence[Union[Sequence[int], int]],
         filters: Optional[Sequence[int]] = None,
         dropout: Optional[Union[Tuple, str, float]] = None,
-        path_drop: Optional[Union[Tuple, str, float]] = 0.1,
+        path_drop: Optional[Union[Tuple, str, float]] = 0.0,
         norm_name: Union[Tuple, str] = ("INSTANCE", {"affine": True}),
-        act_name: Union[Tuple, str] = ("leakyrelu", {"inplace": True, "negative_slope": 0.01}),
+        act_name: Union[Tuple, str] = (
+            "leakyrelu",
+            {"inplace": True, "negative_slope": 0.01},
+        ),
         deep_supervision: bool = False,
         deep_supr_num: int = 1,
         res_block: bool = False,
@@ -170,17 +180,28 @@ class MDUNet(nn.Module):
             self.filters = filters
             self.check_filters()
         else:
-            self.filters = [min(2 ** (5 + i), 320 if spatial_dims == 3 else 512) for i in range(len(strides))]
+            self.filters = [
+                min(2 ** (5 + i), 320 if spatial_dims == 3 else 512)
+                for i in range(len(strides))
+            ]
         self.img_size = img_size
-        self.img_size_list = [len(strides[0])*[self.img_size]] \
-            if isinstance(strides[0], (tuple,list)) \
-                and len(strides[0])!=len(self.img_size) else [self.img_size]
+        self.img_size_list = (
+            [len(strides[0]) * [self.img_size]]
+            if isinstance(strides[0], (tuple, list))
+            and len(strides[0]) != len(self.img_size)
+            else [self.img_size]
+        )
         for s in strides:
-            self.img_size_list.append([sz // (st) for sz,st in zip(self.img_size_list[-1],s)] \
-                if isinstance(s, (tuple,list)) else self.img_size_list[-1] // (s))
-        self.num_units = num_units if type(num_units)==list else [num_units]*len(self.filters)
-        if type(num_units)!=list:
-            self.num_units[-2] = 2*self.num_units[-2]
+            self.img_size_list.append(
+                [sz // (st) for sz, st in zip(self.img_size_list[-1], s)]
+                if isinstance(s, (tuple, list))
+                else self.img_size_list[-1] // (s)
+            )
+        self.num_units = (
+            num_units if type(num_units) == list else [num_units] * len(self.filters)
+        )
+        if type(num_units) != list:
+            self.num_units[-2] = 2 * self.num_units[-2]
         self.input_block = self.get_input_block()
         self.downsamples = self.get_downsamples()
         self.bottleneck = self.get_bottleneck()
@@ -209,12 +230,21 @@ class MDUNet(nn.Module):
             if len(downsamples) != len(upsamples):
                 raise ValueError(f"{len(downsamples)} != {len(upsamples)}")
 
-            if len(downsamples) == 0:  # bottom of the network, pass the bottleneck block
+            if (
+                len(downsamples) == 0
+            ):  # bottom of the network, pass the bottleneck block
                 return bottleneck
 
             if superheads is None:
-                next_layer = create_skips(1 + index, downsamples[1:], upsamples[1:], bottleneck)
-                return DynUNetSkipLayer(index, downsample=downsamples[0], upsample=upsamples[0], next_layer=next_layer)
+                next_layer = create_skips(
+                    1 + index, downsamples[1:], upsamples[1:], bottleneck
+                )
+                return DynUNetSkipLayer(
+                    index,
+                    downsample=downsamples[0],
+                    upsample=upsamples[0],
+                    next_layer=next_layer,
+                )
 
             super_head_flag = False
             if index == 0:  # don't associate a supervision head with self.input_block
@@ -227,7 +257,13 @@ class MDUNet(nn.Module):
                     rest_heads = nn.ModuleList()
 
             # create the next layer down, this will stop at the bottleneck layer
-            next_layer = create_skips(1 + index, downsamples[1:], upsamples[1:], bottleneck, superheads=rest_heads)
+            next_layer = create_skips(
+                1 + index,
+                downsamples[1:],
+                upsamples[1:],
+                bottleneck,
+                superheads=rest_heads,
+            )
             if super_head_flag:
                 return DynUNetSkipLayer(
                     index,
@@ -238,11 +274,19 @@ class MDUNet(nn.Module):
                     super_head=superheads[0],
                 )
 
-            return DynUNetSkipLayer(index, downsample=downsamples[0], upsample=upsamples[0], next_layer=next_layer)
+            return DynUNetSkipLayer(
+                index,
+                downsample=downsamples[0],
+                upsample=upsamples[0],
+                next_layer=next_layer,
+            )
 
         if not self.deep_supervision:
             self.skip_layers = create_skips(
-                0, [self.input_block] + list(self.downsamples), self.upsamples[::-1], self.bottleneck
+                0,
+                [self.input_block] + list(self.downsamples),
+                self.upsamples[::-1],
+                self.bottleneck,
             )
         else:
             self.skip_layers = create_skips(
@@ -255,7 +299,9 @@ class MDUNet(nn.Module):
 
     def check_kernel_stride(self):
         kernels, strides = self.kernel_size, self.strides
-        error_msg = "length of kernel_size and strides should be the same, and no less than 3."
+        error_msg = (
+            "length of kernel_size and strides should be the same, and no less than 3."
+        )
         if len(kernels) != len(strides) or len(kernels) < 3:
             raise ValueError(error_msg)
 
@@ -274,14 +320,18 @@ class MDUNet(nn.Module):
         deep_supr_num, strides = self.deep_supr_num, self.strides
         num_up_layers = len(strides) - 1
         if deep_supr_num >= num_up_layers:
-            raise ValueError("deep_supr_num should be less than the number of up sample layers.")
+            raise ValueError(
+                "deep_supr_num should be less than the number of up sample layers."
+            )
         if deep_supr_num < 1:
             raise ValueError("deep_supr_num should be larger than 0.")
 
     def check_filters(self):
         filters = self.filters
         if len(filters) < len(self.strides):
-            raise ValueError("length of filters should be no less than the length of strides.")
+            raise ValueError(
+                "length of filters should be no less than the length of strides."
+            )
         else:
             self.filters = filters[: len(self.strides)]
 
@@ -298,15 +348,15 @@ class MDUNet(nn.Module):
 
     def get_input_block(self):
         return UnetBasicBlock(
-                self.spatial_dims,
-                self.in_channels,
-                self.filters[0],
-                self.kernel_size[0],
-                self.strides[0],
-                self.norm_name,
-                self.act_name,
-                dropout=self.dropout,
-            )
+            self.spatial_dims,
+            self.in_channels,
+            self.filters[0],
+            self.kernel_size[0],
+            self.strides[0],
+            self.norm_name,
+            self.act_name,
+            dropout=self.dropout,
+        )
 
     def get_bottleneck(self):
         if self.md_encoder:
@@ -317,7 +367,7 @@ class MDUNet(nn.Module):
                 self.kernel_size[-1],
                 self.strides[-1],
                 self.num_units[-1],
-                self.dropout if self.dropout is not None else 0.,
+                self.dropout if self.dropout is not None else 0.0,
                 self.mlp_ratio,
                 self.path_drop,
             )
@@ -335,17 +385,36 @@ class MDUNet(nn.Module):
 
     def get_output_block(self, idx: int):
         if self.md_decoder:
-            return UnetOutBlock(self.spatial_dims, 2*self.filters[idx], self.out_channels, dropout=self.dropout)
+            return UnetOutBlock(
+                self.spatial_dims,
+                2 * self.filters[idx],
+                self.out_channels,
+                dropout=self.dropout,
+            )
         else:
-            return UnetOutBlock(self.spatial_dims, self.filters[idx], self.out_channels, dropout=self.dropout)
+            return UnetOutBlock(
+                self.spatial_dims,
+                self.filters[idx],
+                self.out_channels,
+                dropout=self.dropout,
+            )
 
     def get_downsamples(self):
         inp, out = self.filters[:-2], self.filters[1:-1]
         strides, kernel_size = self.strides[1:-1], self.kernel_size[1:-1]
         img_size = self.img_size_list[1:-1] if self.md_encoder else None
         num_units = self.num_units[1:-1] if self.md_encoder else None
-        return self.get_module_list(inp, out, kernel_size, strides, self.conv_block,
-            md=self.md_encoder, transpose=False, img_size=img_size, num_units=num_units)
+        return self.get_module_list(
+            inp,
+            out,
+            kernel_size,
+            strides,
+            self.conv_block,
+            md=self.md_encoder,
+            transpose=False,
+            img_size=img_size,
+            num_units=num_units,
+        )
 
     def get_upsamples(self):
         inp, out = self.filters[1:][::-1], self.filters[:-1][::-1]
@@ -354,9 +423,17 @@ class MDUNet(nn.Module):
         img_size = self.img_size_list[1:][::-1] if self.md_decoder else None
         num_units = self.num_units[1:][::-1] if self.md_decoder else None
         return self.get_module_list(
-            inp, out, kernel_size, strides, MDBlock if self.md_decoder else UnetUpBlock, 
-            upsample_kernel_size, trans_bias=self.trans_bias, md=self.md_decoder, transpose=True,
-            img_size=img_size, num_units=num_units
+            inp,
+            out,
+            kernel_size,
+            strides,
+            MDBlock if self.md_decoder else UnetUpBlock,
+            upsample_kernel_size,
+            trans_bias=self.trans_bias,
+            md=self.md_decoder,
+            transpose=True,
+            img_size=img_size,
+            num_units=num_units,
         )
 
     def get_module_list(
@@ -375,17 +452,19 @@ class MDUNet(nn.Module):
     ):
         layers = []
         if md:
-            for i, (img, in_c, out_c, kernel, stride, units) in enumerate(zip(
-                img_size, in_channels, out_channels, kernel_size, strides, num_units
-            )):
+            for i, (img, in_c, out_c, kernel, stride, units) in enumerate(
+                zip(
+                    img_size, in_channels, out_channels, kernel_size, strides, num_units
+                )
+            ):
                 params = {
                     "img_size": img,
-                    "in_chans": 2*in_c if transpose and i!=0 else in_c,
+                    "in_chans": 2 * in_c if transpose and i != 0 else in_c,
                     "embed_chans": out_c,
                     "patch_size": kernel,
                     "stride": stride,
                     "num_units": units,
-                    "dropout": self.dropout if self.dropout is not None else 0.,
+                    "dropout": self.dropout if self.dropout is not None else 0.0,
                     "mlp_ratio": self.mlp_ratio,
                     "transpose": transpose,
                     "path_dropout": self.path_drop,
@@ -396,7 +475,11 @@ class MDUNet(nn.Module):
         else:
             if upsample_kernel_size is not None:
                 for in_c, out_c, kernel, stride, up_kernel in zip(
-                    in_channels, out_channels, kernel_size, strides, upsample_kernel_size
+                    in_channels,
+                    out_channels,
+                    kernel_size,
+                    strides,
+                    upsample_kernel_size,
                 ):
                     params = {
                         "spatial_dims": self.spatial_dims,
@@ -413,7 +496,9 @@ class MDUNet(nn.Module):
                     layer = conv_block(**params)
                     layers.append(layer)
             else:
-                for in_c, out_c, kernel, stride in zip(in_channels, out_channels, kernel_size, strides):
+                for in_c, out_c, kernel, stride in zip(
+                    in_channels, out_channels, kernel_size, strides
+                ):
                     params = {
                         "spatial_dims": self.spatial_dims,
                         "in_channels": in_c,
@@ -429,11 +514,15 @@ class MDUNet(nn.Module):
         return nn.ModuleList(layers)
 
     def get_deep_supervision_heads(self):
-        return nn.ModuleList([self.get_output_block(i + 1) for i in range(self.deep_supr_num)])
+        return nn.ModuleList(
+            [self.get_output_block(i + 1) for i in range(self.deep_supr_num)]
+        )
 
     @staticmethod
     def initialize_weights(module):
-        if isinstance(module, (nn.Conv3d, nn.Conv2d, nn.ConvTranspose3d, nn.ConvTranspose2d)):
+        if isinstance(
+            module, (nn.Conv3d, nn.Conv2d, nn.ConvTranspose3d, nn.ConvTranspose2d)
+        ):
             module.weight = nn.init.kaiming_normal_(module.weight, a=0.01)
             if module.bias is not None:
                 module.bias = nn.init.constant_(module.bias, 0)

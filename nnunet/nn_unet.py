@@ -24,6 +24,7 @@ from monai.inferers import sliding_window_inference
 
 # from monai.networks.nets import DynUNet
 from nnunet.model import MDUNet as DynUNet
+from monai.networks.nets import SwinUNETR
 from monai.optimizers.lr_scheduler import WarmupCosineSchedule
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.special import expit, softmax
@@ -192,25 +193,37 @@ class NNUnet(pl.LightningModule):
         if self.args.brats:
             out_channels = 3
 
-        self.model = DynUNet(
-            self.args.dim,
-            in_channels,
-            out_channels,
-            kernels,
-            strides,
-            strides[1:],
-            filters=self.args.filters,
-            norm_name=("INSTANCE", {"affine": True}),
-            act_name=("leakyrelu", {"inplace": True, "negative_slope": 0.01}),
-            deep_supervision=self.args.deep_supervision,
-            deep_supr_num=self.args.deep_supr_num,
-            res_block=self.args.res_block,
-            trans_bias=True,
-            img_size=self.patch_size,
-            num_units=self.args.num_units,
-            md_encoder=self.args.md_encoder,
-            md_decoder=self.args.md_decoder,
-        )
+        if self.args.swin:
+            self.model = SwinUNETR(
+                img_size=self.patch_size,
+                in_channels=in_channels,
+                out_channels=out_channels,
+                feature_size=48,
+                drop_rate=0.0,
+                attn_drop_rate=0.0,
+                dropout_path_rate=0.0,
+                use_checkpoint=True,
+            )
+        else:
+            self.model = DynUNet(
+                self.args.dim,
+                in_channels,
+                out_channels,
+                kernels,
+                strides,
+                strides[1:],
+                filters=self.args.filters,
+                norm_name=("INSTANCE", {"affine": True}),
+                act_name=("leakyrelu", {"inplace": True, "negative_slope": 0.01}),
+                deep_supervision=self.args.deep_supervision,
+                deep_supr_num=self.args.deep_supr_num,
+                res_block=self.args.res_block,
+                trans_bias=True,
+                img_size=self.patch_size,
+                num_units=self.args.num_units,
+                md_encoder=self.args.md_encoder,
+                md_decoder=self.args.md_decoder,
+            )
         print0(
             f"Filters: {self.model.filters},\nKernels: {kernels}\nStrides: {strides}"
         )

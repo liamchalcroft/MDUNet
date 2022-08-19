@@ -31,7 +31,9 @@ def non_negative_int(value):
 
 def float_0_1(value):
     fvalue = float(value)
-    assert 0 <= fvalue <= 1, f"Argparse error. Expected float value to be in range (0, 1), but got {value}"
+    assert (
+        0 <= fvalue <= 1
+    ), f"Argparse error. Expected float value to be in range (0, 1), but got {value}"
     return fvalue
 
 
@@ -53,27 +55,70 @@ def get_main_args(strings=None):
     arg("--gpus", type=non_negative_int, default=1, help="Number of gpus")
     arg("--nodes", type=non_negative_int, default=1, help="Number of nodes")
     arg("--learning_rate", type=float, default=0.0008, help="Learning rate")
-    arg("--gradient_clip_val", type=float, default=1., help="Gradient clipping norm value")
-    arg("--negative_slope", type=float, default=0.01, help="Negative slope for LeakyReLU")
+    arg(
+        "--gradient_clip_val",
+        type=float,
+        default=1.0,
+        help="Gradient clipping norm value",
+    )
+    arg(
+        "--negative_slope",
+        type=float,
+        default=0.01,
+        help="Negative slope for LeakyReLU",
+    )
     arg("--tta", action="store_true", help="Enable test time augmentation")
     arg("--tb_logs", action="store_true", help="Log metrics to tensoboard")
     arg("--wandb_logs", action="store_true", help="Log metrics to Weights & Biases")
-    arg("--wandb_project", type=str, default=None, help="Project name for Weights & Biases")
-    arg("--brats", action="store_true", help="Enable BraTS specific training and inference")
+    arg(
+        "--wandb_project",
+        type=str,
+        default=None,
+        help="Project name for Weights & Biases",
+    )
+    arg(
+        "--brats",
+        action="store_true",
+        help="Enable BraTS specific training and inference",
+    )
     arg("--deep_supervision", action="store_true", help="Enable deep supervision")
     arg("--more_chn", action="store_true", help="Create encoder with more channels")
-    arg("--invert_resampled_y", action="store_true", help="Resize predictions to match label size before resampling")
+    arg(
+        "--invert_resampled_y",
+        action="store_true",
+        help="Resize predictions to match label size before resampling",
+    )
     arg("--amp", action="store_true", help="Enable automatic mixed precision")
     arg("--benchmark", action="store_true", help="Run model benchmarking")
     arg("--focal", action="store_true", help="Use focal loss instead of cross entropy")
     arg("--save_ckpt", action="store_true", help="Enable saving checkpoint")
-    arg("--nfolds", type=positive_int, default=5, help="Number of cross-validation folds")
+    arg(
+        "--nfolds",
+        type=positive_int,
+        default=5,
+        help="Number of cross-validation folds",
+    )
     arg("--seed", type=non_negative_int, default=1, help="Random seed")
-    arg("--skip_first_n_eval", type=non_negative_int, default=0, help="Skip the evaluation for the first n epochs.")
-    arg("--val_epochs", type=non_negative_int, default=0, help="Frequency of validation epochs.")
+    arg(
+        "--skip_first_n_eval",
+        type=non_negative_int,
+        default=0,
+        help="Skip the evaluation for the first n epochs.",
+    )
+    arg(
+        "--val_epochs",
+        type=non_negative_int,
+        default=0,
+        help="Frequency of validation epochs.",
+    )
     arg("--ckpt_path", type=str, default=None, help="Path for loading checkpoint")
     arg("--weight_path", type=str, default=None, help="Path for loading model weights")
-    arg("--ckpt_store_dir", type=str, default="/results", help="Path for saving checkpoint")
+    arg(
+        "--ckpt_store_dir",
+        type=str,
+        default="/results",
+        help="Path for saving checkpoint",
+    )
     arg("--fold", type=non_negative_int, default=0, help="Fold number")
     arg("--patience", type=positive_int, default=100, help="Early stopping patience")
     arg("--batch_size", type=positive_int, default=2, help="Batch size")
@@ -82,22 +127,75 @@ def get_main_args(strings=None):
     arg("--weight_decay", type=float, default=0.0001, help="Weight decay (L2 penalty)")
     arg("--save_preds", action="store_true", help="Enable prediction saving")
     arg("--dim", type=int, choices=[2, 3], default=3, help="UNet dimension")
-    arg("--resume_training", action="store_true", help="Resume training from the last checkpoint")
-    arg("--num_workers", type=non_negative_int, default=8, help="Number of subprocesses to use for data loading")
-    arg("--epochs", type=non_negative_int, default=1000, help="Number of training epochs.")
-    arg("--warmup", type=non_negative_int, default=5, help="Warmup iterations before collecting statistics")
-    arg("--norm", type=str, choices=["instance", "batch", "group"], default="instance", help="Normalization layer")
-    arg("--nvol", type=positive_int, default=4, help="Number of volumes which come into single batch size for 2D model")
+    arg(
+        "--resume_training",
+        action="store_true",
+        help="Resume training from the last checkpoint",
+    )
+    arg(
+        "--num_workers",
+        type=non_negative_int,
+        default=8,
+        help="Number of subprocesses to use for data loading",
+    )
+    arg(
+        "--epochs",
+        type=non_negative_int,
+        default=1000,
+        help="Number of training epochs.",
+    )
+    arg(
+        "--warmup",
+        type=non_negative_int,
+        default=5,
+        help="Warmup iterations before collecting statistics",
+    )
+    arg(
+        "--norm",
+        type=str,
+        choices=["instance", "batch", "group"],
+        default="instance",
+        help="Normalization layer",
+    )
+    arg(
+        "--nvol",
+        type=positive_int,
+        default=4,
+        help="Number of volumes which come into single batch size for 2D model",
+    )
     arg("--depth", type=non_negative_int, default=5, help="The depth of the encoder")
-    arg("--min_fmap", type=non_negative_int, default=4, help="Minimal dimension of feature map in the bottleneck")
-    arg("--deep_supr_num", type=non_negative_int, default=2, help="Number of deep supervision heads")
+    arg(
+        "--min_fmap",
+        type=non_negative_int,
+        default=4,
+        help="Minimal dimension of feature map in the bottleneck",
+    )
+    arg(
+        "--deep_supr_num",
+        type=non_negative_int,
+        default=2,
+        help="Number of deep supervision heads",
+    )
     arg("--res_block", action="store_true", help="Enable residual blocks")
-    arg("--filters", nargs="+", help="[Optional] Set U-Net filters", default=None, type=int)
-    arg("--num_units", nargs="+", help="[Optional] Set number of MD blocks per encoder level", default=2, type=int)
+    arg(
+        "--filters",
+        nargs="+",
+        help="[Optional] Set U-Net filters",
+        default=None,
+        type=int,
+    )
+    arg(
+        "--num_units",
+        nargs="+",
+        help="[Optional] Set number of MD blocks per encoder level",
+        default=2,
+        type=int,
+    )
     arg("--md_encoder", action="store_true", help="Enable MD modules in encoder")
     arg("--md_decoder", action="store_true", help="Enable MD modules in decoder")
+    arg("--swin", action="store_true", help="Use Swin-UNETR model")
     arg("--shape", action="store_true", help="Use shape term in loss")
-    arg("--paste", type=float, default=0., help="Probability to use lesion pasting.")
+    arg("--paste", type=float, default=0.0, help="Probability to use lesion pasting.")
     arg(
         "--data2d_dim",
         choices=[2, 3],
