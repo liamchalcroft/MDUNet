@@ -58,7 +58,7 @@ def get_main_args(strings=None):
     arg(
         "--gradient_clip_val",
         type=float,
-        default=1.0,
+        default=12,
         help="Gradient clipping norm value",
     )
     arg(
