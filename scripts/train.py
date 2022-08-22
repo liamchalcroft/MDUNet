@@ -81,7 +81,7 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
     path_to_main = os.path.join(dirname(dirname(os.path.realpath(__file__))), "main.py")
-    cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt "
+    cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt --scheduler "
     cmd += f"--results {args.results} "
     cmd += f"--ckpt_store_dir {args.results} "
     cmd += f"--weight_path {args.weight_path} "
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     cmd += f"--epochs {args.epochs} "
     cmd += f"--learning_rate {args.learning_rate} "
     cmd += f"--paste {args.paste} "
-    cmd += "--scheduler " if args.scheduler else ""
+    # cmd += "--scheduler " if args.scheduler else ""
     cmd += "--amp " if args.amp else ""
     cmd += "--tta " if args.tta else ""
     cmd += "--resume_training " if args.resume_training else ""
