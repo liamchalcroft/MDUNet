@@ -45,7 +45,7 @@ parser.add_argument(
     "--wandb_project", type=str, default=None, help="Project name for Weights & Biases"
 )
 parser.add_argument("--epochs", type=int, default=600, help="Number of epochs to train")
-parser.add_argument("--learning_rate", type=float, default=2e-4, help="Learning rate")
+parser.add_argument("--learning_rate", type=float, default=0.0003, help="Learning rate")
 parser.add_argument("--mde", action="store_true", help="Enable MD modules in encoder")
 parser.add_argument("--mdd", action="store_true", help="Enable MD modules in decoder")
 parser.add_argument("--swin", action="store_true", help="Use Swin-UNETR.")

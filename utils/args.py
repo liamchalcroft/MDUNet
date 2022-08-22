@@ -54,7 +54,7 @@ def get_main_args(strings=None):
     arg("--task", type=str, default="01", help="Task number. MSD uses numbers 01-10")
     arg("--gpus", type=non_negative_int, default=1, help="Number of gpus")
     arg("--nodes", type=non_negative_int, default=1, help="Number of nodes")
-    arg("--learning_rate", type=float, default=0.0008, help="Learning rate")
+    arg("--learning_rate", type=float, default=0.0003, help="Learning rate")
     arg(
         "--gradient_clip_val",
         type=float,
