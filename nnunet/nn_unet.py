@@ -224,9 +224,9 @@ class NNUnet(pl.LightningModule):
                 md_encoder=self.args.md_encoder,
                 md_decoder=self.args.md_decoder,
             )
-        print0(
-            f"Filters: {self.model.filters},\nKernels: {kernels}\nStrides: {strides}"
-        )
+            print0(
+                f"Filters: {self.model.filters},\nKernels: {kernels}\nStrides: {strides}"
+            )
 
     def do_inference(self, image):
         if self.args.dim == 3:
