@@ -529,3 +529,9 @@ class MDUNet(nn.Module):
 
 
 MDUnet = mdunet = MDUNet
+
+if __name__ == "__main__":
+    model = MDUNet(3, 2, 1, md_encoder=True, md_decoder=True, img_size=128)
+    x = torch.randn(1, 2, 128, 128, 128)
+    y = model(x)
+    assert x.shape[2:] == y.shape[2:]
