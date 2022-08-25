@@ -17,6 +17,7 @@ import os
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary, RichProgressBar
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+import wandb
 
 from data_loading.data_module import DataModule
 from nnunet.nn_unet import NNUnet
@@ -78,6 +79,7 @@ if __name__ == "__main__":
                 # name=f"task={args.task}_dim={args.dim}_{args.logname}_fold={args.fold}_precision={16 if args.amp else 32}",
                 name=f"{args.logname}_fold={args.fold}",
                 entity="atlas-ploras",
+                settings=wandb.Settings(start_method="fork")
                 # version=0,
             )
         if args.save_ckpt:
