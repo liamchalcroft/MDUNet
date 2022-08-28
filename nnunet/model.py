@@ -148,7 +148,7 @@ class MDUNet(nn.Module):
         deep_supr_num: int = 1,
         res_block: bool = False,
         trans_bias: bool = False,
-        img_size: int = None,
+        img_size: Optional[Union[Sequence[int], int]] = None,
         num_units: Sequence[Union[Sequence[int], int]] = 2,
         mlp_ratio: int = 4,
         md_encoder: bool = True,
@@ -184,13 +184,13 @@ class MDUNet(nn.Module):
                 min(2 ** (5 + i), 320 if spatial_dims == 3 else 512)
                 for i in range(len(strides))
             ]
+        if isinstance(img_size, int):
+            img_size = len(strides[0]) * [img_size]
+        assert isinstance(img_size, (list, tuple)) and len(img_size) == len(
+            strides[0]
+        ), "Image size is a list of incorrect size. Must provide either a single int value, or list of length equal to spatial dims."
         self.img_size = img_size
-        self.img_size_list = (
-            [len(strides[0]) * [self.img_size]]
-            if isinstance(strides[0], (tuple, list))
-            and len(strides[0]) != len(self.img_size)
-            else [self.img_size]
-        )
+        self.img_size_list = [self.img_size]
         for s in strides:
             self.img_size_list.append(
                 [sz // (st) for sz, st in zip(self.img_size_list[-1], s)]
