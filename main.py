@@ -32,7 +32,7 @@ from utils.utils import (
 
 if __name__ == "__main__":
     args = get_main_args()
-    if args.mde or args.mdd:
+    if args.md_encoder or args.md_decoder:
         args.gradient_clip_val = 5
     #    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
     set_cuda_devices(args)
