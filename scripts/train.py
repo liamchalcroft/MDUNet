@@ -76,6 +76,12 @@ parser.add_argument(
 parser.add_argument(
     "--weight_path", type=str, default=None, help="Path for loading model weights"
 )
+parser.add_argument(
+    "--gradient_clip_val",
+    type=float,
+    default=12,
+    help="Gradient clipping norm value",
+)
 
 
 if __name__ == "__main__":
@@ -113,4 +119,5 @@ if __name__ == "__main__":
     cmd += "--tb_logs " if args.tb_logs else ""
     cmd += "--wandb_logs " if args.wandb_logs else ""
     cmd += f"--wandb_project {args.wandb_project}" if args.wandb_logs else ""
+    cmd += f"--gradient_clip_val {args.gradient_clip_val}"
     run(cmd, shell=True)
