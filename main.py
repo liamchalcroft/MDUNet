@@ -35,6 +35,7 @@ if __name__ == "__main__":
     print(args.md_encoder, args.md_decoder)
     if args.md_encoder or args.md_decoder:
         args.gradient_clip_val = 5
+    print(args.gradient_clip_val)
     #    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
     set_cuda_devices(args)
     seed_everything(args.seed)
