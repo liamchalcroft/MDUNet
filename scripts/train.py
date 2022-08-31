@@ -106,6 +106,7 @@ if __name__ == "__main__":
     cmd += f"--epochs {args.epochs} "
     cmd += f"--learning_rate {args.learning_rate} "
     cmd += f"--paste {args.paste} "
+    cmd += f"--gradient_clip_val {args.gradient_clip_val}"
     # cmd += "--scheduler " if args.scheduler else ""
     cmd += "--amp " if args.amp else ""
     cmd += "--tta " if args.tta else ""
@@ -119,5 +120,4 @@ if __name__ == "__main__":
     cmd += "--tb_logs " if args.tb_logs else ""
     cmd += "--wandb_logs " if args.wandb_logs else ""
     cmd += f"--wandb_project {args.wandb_project}" if args.wandb_logs else ""
-    cmd += f"--gradient_clip_val {args.gradient_clip_val}"
     run(cmd, shell=True)
