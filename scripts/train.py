@@ -106,7 +106,7 @@ if __name__ == "__main__":
     cmd += f"--epochs {args.epochs} "
     cmd += f"--learning_rate {args.learning_rate} "
     cmd += f"--paste {args.paste} "
-    cmd += f"--gradient_clip_val {args.gradient_clip_val}"
+    cmd += f"--gradient_clip_val {args.gradient_clip_val} "
     # cmd += "--scheduler " if args.scheduler else ""
     cmd += "--amp " if args.amp else ""
     cmd += "--tta " if args.tta else ""
