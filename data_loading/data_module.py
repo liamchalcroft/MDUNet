@@ -43,7 +43,13 @@ class DataModule(LightningDataModule):
             "invert_resampled_y": self.args.invert_resampled_y,
             "patch_size": get_config_file(self.args)["patch_size"],
         }
-        self.train_imgs, self.train_lbls, self.val_imgs, self.val_lbls, self.test_imgs = ([],) * 5
+        (
+            self.train_imgs,
+            self.train_lbls,
+            self.val_imgs,
+            self.val_lbls,
+            self.test_imgs,
+        ) = ([],) * 5
 
     def setup(self, stage=None):
         if self.args.exec_mode == "predict":
@@ -52,28 +58,48 @@ class DataModule(LightningDataModule):
         else:
             meta = load_data(self.data_path, "*_meta.npy")
             orig_lbl = load_data(self.data_path, "*_orig_lbl.npy")
-            imgs, lbls = load_data(self.data_path, "*_x.npy"), load_data(self.data_path, "*_y.npy")
+            imgs, lbls = load_data(self.data_path, "*_x.npy"), load_data(
+                self.data_path, "*_y.npy"
+            )
         self.test_imgs, test_meta = get_test_fnames(self.args, self.data_path, meta)
 
         if self.args.exec_mode != "predict" or self.args.benchmark:
             train_idx, val_idx = list(self.kfold.split(imgs))[self.args.fold]
             orig_lbl, meta = get_split(orig_lbl, val_idx), get_split(meta, val_idx)
             self.kwargs.update({"orig_lbl": orig_lbl, "meta": meta})
-            self.train_imgs, self.train_lbls = get_split(imgs, train_idx), get_split(lbls, train_idx)
-            self.val_imgs, self.val_lbls = get_split(imgs, val_idx), get_split(lbls, val_idx)
+            self.train_imgs, self.train_lbls = get_split(imgs, train_idx), get_split(
+                lbls, train_idx
+            )
+            self.val_imgs, self.val_lbls = get_split(imgs, val_idx), get_split(
+                lbls, val_idx
+            )
         else:
             self.kwargs.update({"meta": test_meta})
-        print0(f"{len(self.train_imgs)} training, {len(self.val_imgs)} validation, {len(self.test_imgs)} test examples")
+        print0(
+            f"{len(self.train_imgs)} training, {len(self.val_imgs)} validation, {len(self.test_imgs)} test examples"
+        )
 
     def train_dataloader(self):
-        return fetch_dali_loader(self.train_imgs, self.train_lbls, self.args.batch_size, "train", **self.kwargs)
+        return fetch_dali_loader(
+            self.train_imgs,
+            self.train_lbls,
+            self.args.batch_size,
+            "train",
+            **self.kwargs,
+        )
 
     def val_dataloader(self):
         return fetch_dali_loader(self.val_imgs, self.val_lbls, 1, "eval", **self.kwargs)
 
     def test_dataloader(self):
         if self.kwargs["benchmark"]:
-            return fetch_dali_loader(self.train_imgs, self.train_lbls, self.args.val_batch_size, "test", **self.kwargs)
+            return fetch_dali_loader(
+                self.train_imgs,
+                self.train_lbls,
+                self.args.val_batch_size,
+                "test",
+                **self.kwargs,
+            )
         return fetch_dali_loader(self.test_imgs, None, 1, "test", **self.kwargs)
 
 

@@ -25,7 +25,9 @@ from nvidia.dali.plugin.pytorch import DALIGenericIterator
 
 
 def random_augmentation(probability, augmented, original):
-    condition = fn.cast(fn.random.coin_flip(probability=probability), dtype=types.DALIDataType.BOOL)
+    condition = fn.cast(
+        fn.random.coin_flip(probability=probability), dtype=types.DALIDataType.BOOL
+    )
     neg_condition = condition ^ True
     return condition * augmented + neg_condition * original
 
@@ -39,7 +41,9 @@ class GenericPipeline(Pipeline):
         self.patch_size = kwargs["patch_size"]
         self.load_to_gpu = kwargs["load_to_gpu"]
         self.input_x = self.get_reader(kwargs["imgs"])
-        self.input_y = self.get_reader(kwargs["lbls"]) if kwargs["lbls"] is not None else None
+        self.input_y = (
+            self.get_reader(kwargs["lbls"]) if kwargs["lbls"] is not None else None
+        )
 
     def get_reader(self, data):
         return ops.readers.Numpy(
@@ -75,7 +79,9 @@ class GenericPipeline(Pipeline):
         return img, lbl
 
     def transpose_fn(self, img, lbl):
-        img, lbl = fn.transpose(img, perm=(1, 0, 2, 3)), fn.transpose(lbl, perm=(1, 0, 2, 3))
+        img, lbl = fn.transpose(img, perm=(1, 0, 2, 3)), fn.transpose(
+            lbl, perm=(1, 0, 2, 3)
+        )
         return img, lbl
 
 
@@ -84,7 +90,9 @@ class TrainPipeline(GenericPipeline):
         super().__init__(batch_size, num_threads, device_id, **kwargs)
         self.oversampling = kwargs["oversampling"]
         self.crop_shape = types.Constant(np.array(self.patch_size), dtype=types.INT64)
-        self.crop_shape_float = types.Constant(np.array(self.patch_size), dtype=types.FLOAT)
+        self.crop_shape_float = types.Constant(
+            np.array(self.patch_size), dtype=types.FLOAT
+        )
 
     @staticmethod
     def slice_fn(img):
@@ -102,10 +110,20 @@ class TrainPipeline(GenericPipeline):
             cache_objects=True,
             foreground_prob=self.oversampling,
         )
-        anchor = fn.roi_random_crop(label, roi_start=roi_start, roi_end=roi_end, crop_shape=[1, *self.patch_size])
+        anchor = fn.roi_random_crop(
+            label,
+            roi_start=roi_start,
+            roi_end=roi_end,
+            crop_shape=[1, *self.patch_size],
+        )
         anchor = fn.slice(anchor, 1, 3, axes=[0])  # drop channels from anchor
         img, label = fn.slice(
-            [img, label], anchor, self.crop_shape, axis_names="DHW", out_of_bounds_policy="pad", device="cpu"
+            [img, label],
+            anchor,
+            self.crop_shape,
+            axis_names="DHW",
+            out_of_bounds_policy="pad",
+            device="cpu",
         )
         return img.gpu(), label.gpu()
 
@@ -114,12 +132,18 @@ class TrainPipeline(GenericPipeline):
         d, h, w = [scale * x for x in self.patch_size]
         if self.dim == 2:
             d = self.patch_size[0]
-        img, lbl = fn.crop(img, crop_h=h, crop_w=w, crop_d=d), fn.crop(lbl, crop_h=h, crop_w=w, crop_d=d)
-        img, lbl = self.resize(img, types.DALIInterpType.INTERP_CUBIC), self.resize(lbl, types.DALIInterpType.INTERP_NN)
+        img, lbl = fn.crop(img, crop_h=h, crop_w=w, crop_d=d), fn.crop(
+            lbl, crop_h=h, crop_w=w, crop_d=d
+        )
+        img, lbl = self.resize(img, types.DALIInterpType.INTERP_CUBIC), self.resize(
+            lbl, types.DALIInterpType.INTERP_NN
+        )
         return img, lbl
 
     def noise_fn(self, img):
-        img_noised = img + fn.random.normal(img, stddev=fn.random.uniform(range=(0.0, 0.33)))
+        img_noised = img + fn.random.normal(
+            img, stddev=fn.random.uniform(range=(0.0, 0.33))
+        )
         return random_augmentation(0.15, img_noised, img)
 
     def blur_fn(self, img):
@@ -127,7 +151,9 @@ class TrainPipeline(GenericPipeline):
         return random_augmentation(0.15, img_blurred, img)
 
     def brightness_fn(self, img):
-        brightness_scale = random_augmentation(0.15, fn.random.uniform(range=(0.7, 1.3)), 1.0)
+        brightness_scale = random_augmentation(
+            0.15, fn.random.uniform(range=(0.7, 1.3)), 1.0
+        )
         return img * brightness_scale
 
     def contrast_fn(self, img):
@@ -228,9 +254,13 @@ class LightningWrapper(DALIGenericIterator):
 def fetch_dali_loader(imgs, lbls, batch_size, mode, **kwargs):
     assert len(imgs) > 0, "Empty list of images!"
     if lbls is not None:
-        assert len(imgs) == len(lbls), f"Number of images ({len(imgs)}) not matching number of labels ({len(lbls)})"
+        assert len(imgs) == len(
+            lbls
+        ), f"Number of images ({len(imgs)}) not matching number of labels ({len(lbls)})"
 
-    if kwargs["benchmark"]:  # Just to make sure the number of examples is large enough for benchmark run.
+    if kwargs[
+        "benchmark"
+    ]:  # Just to make sure the number of examples is large enough for benchmark run.
         batches = kwargs["test_batches"] if mode == "test" else kwargs["train_batches"]
         examples = batches * batch_size * kwargs["gpus"]
         imgs = list(itertools.chain(*(100 * [imgs])))[:examples]
@@ -240,8 +270,16 @@ def fetch_dali_loader(imgs, lbls, batch_size, mode, **kwargs):
     pipeline = PIPELINES[mode]
     shuffle = True if mode == "train" else False
     dynamic_shape = True if mode in ["eval", "test"] else False
-    load_to_gpu = True if mode in ["eval", "test", "benchmark"] else False
-    pipe_kwargs = {"imgs": imgs, "lbls": lbls, "load_to_gpu": load_to_gpu, "shuffle": shuffle, **kwargs}
+    load_to_gpu = (
+        True if mode in ["eval", "test", "benchmark"] and kwargs["gpus"] > 0 else False
+    )
+    pipe_kwargs = {
+        "imgs": imgs,
+        "lbls": lbls,
+        "load_to_gpu": load_to_gpu,
+        "shuffle": shuffle,
+        **kwargs,
+    }
     output_map = ["image", "meta"] if mode == "test" else ["image", "label"]
 
     if kwargs["dim"] == 2 and mode in ["train", "benchmark"]:
