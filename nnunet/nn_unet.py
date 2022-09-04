@@ -18,7 +18,6 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-from apex.optimizers import FusedAdam, FusedSGD
 from data_loading.data_module import get_data_path, get_test_fnames
 from monai.inferers import sliding_window_inference
 
@@ -314,6 +313,11 @@ class NNUnet(pl.LightningModule):
             self.dllogger.flush()
 
     def configure_optimizers(self):
+        if self.args.gpus > 0:
+            from apex.optimizers import FusedAdam, FusedSGD
+        else:
+            import torch.optim.Adam as FusedAdam
+            import torch.optim.SGD as FusedSGD
         optimizer = {
             "sgd": FusedSGD(
                 self.parameters(), lr=self.learning_rate, momentum=self.args.momentum
