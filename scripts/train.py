@@ -20,6 +20,7 @@ from subprocess import run
 parser = ArgumentParser(ArgumentDefaultsHelpFormatter)
 parser.add_argument("--task", type=str, default="01", help="Path to data")
 parser.add_argument("--gpus", type=int, required=True, help="Number of GPUs")
+parser.add_argument("--tpus", type=int, required=True, help="Number of TPUs")
 parser.add_argument(
     "--fold", type=int, required=True, choices=[0, 1, 2, 3, 4], help="Fold number"
 )
@@ -103,6 +104,7 @@ if __name__ == "__main__":
     cmd += f"--skip_first_n_eval {args.skip_first_n_eval} "
     cmd += f"--val_epochs {args.val_epochs} "
     cmd += f"--gpus {args.gpus} "
+    cmd += f"--tpus {args.tpus} "
     cmd += f"--epochs {args.epochs} "
     cmd += f"--learning_rate {args.learning_rate} "
     cmd += f"--paste {args.paste} "
