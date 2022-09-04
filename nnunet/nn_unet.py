@@ -316,8 +316,8 @@ class NNUnet(pl.LightningModule):
         if self.args.gpus > 0:
             from apex.optimizers import FusedAdam, FusedSGD
         else:
-            import torch.optim.Adam as FusedAdam
-            import torch.optim.SGD as FusedSGD
+            from torch.optim import Adam as FusedAdam
+            from torch.optim import SGD as FusedSGD
         optimizer = {
             "sgd": FusedSGD(
                 self.parameters(), lr=self.learning_rate, momentum=self.args.momentum
