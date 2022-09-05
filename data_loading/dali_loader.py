@@ -285,6 +285,7 @@ def fetch_dali_loader(imgs, lbls, batch_size, mode, **kwargs):
         "shuffle": shuffle,
         **kwargs,
     }
+    print(pipe_kwargs)
     output_map = ["image", "meta"] if mode == "test" else ["image", "label"]
 
     if kwargs["dim"] == 2 and mode in ["train", "benchmark"]:
