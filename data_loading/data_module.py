@@ -43,6 +43,8 @@ class DataModule(LightningDataModule):
             "invert_resampled_y": self.args.invert_resampled_y,
             "patch_size": get_config_file(self.args)["patch_size"],
         }
+        if self.args.tpus > 0:
+            self.kwargs["tpu"] = self.args.tpus
         (
             self.train_imgs,
             self.train_lbls,
