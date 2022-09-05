@@ -125,7 +125,10 @@ class TrainPipeline(GenericPipeline):
             out_of_bounds_policy="pad",
             device="cpu",
         )
-        return img.gpu(), label.gpu()
+        if self.load_to_gpu:
+            img = img.gpu()
+            label = label.gpu()
+        return img, label
 
     def zoom_fn(self, img, lbl):
         scale = random_augmentation(0.15, fn.random.uniform(range=(0.7, 1.0)), 1.0)
