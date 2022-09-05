@@ -125,4 +125,7 @@ if __name__ == "__main__":
     cmd += "--tb_logs " if args.tb_logs else ""
     cmd += "--wandb_logs " if args.wandb_logs else ""
     cmd += f"--wandb_project {args.wandb_project}" if args.wandb_logs else ""
-    run(cmd, shell=True)
+    if args.tpus > 0:
+        os.system(cmd)
+    else:
+        run(cmd, shell=True)
