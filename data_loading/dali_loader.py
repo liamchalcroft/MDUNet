@@ -180,8 +180,8 @@ class TrainPipeline(GenericPipeline):
         img = self.contrast_fn(img)
         if self.dim == 2:
             img, lbl = self.transpose_fn(img, lbl)
-        if "tpu" in self.kwargs.keys():
-            img, lbl = img.cpu(), lbl.cpu()
+        # if "tpu" in self.kwargs.keys():
+        #     img, lbl = img.cpu(), lbl.cpu()
         return img, lbl
 
 
