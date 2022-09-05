@@ -29,9 +29,12 @@ from utils.utils import (
     set_granularity,
     verify_ckpt_path,
 )
+from torch.multiprocessing import set_start_method
 
 if __name__ == "__main__":
     args = get_main_args()
+    if args.tpus > 0 and args.gpus > 0:
+        set_start_method("spawn")
     #    set_granularity()  # Increase maximum fetch granularity of L2 to 128 bytes
     set_cuda_devices(args)
     seed_everything(args.seed)
