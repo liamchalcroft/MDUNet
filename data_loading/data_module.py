@@ -36,7 +36,7 @@ class DataModule(LightningDataModule):
             "nvol": self.args.nvol,
             "overlap": self.args.overlap,
             "benchmark": self.args.benchmark,
-            "num_workers": self.args.num_workers,
+            "num_workers": 0 if self.args.tpus > 0 else self.args.num_workers,
             "oversampling": self.args.oversampling,
             "test_batches": self.args.test_batches,
             "train_batches": self.args.train_batches,
