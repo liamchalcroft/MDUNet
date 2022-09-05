@@ -313,7 +313,7 @@ class NNUnet(pl.LightningModule):
             self.dllogger.flush()
 
     def configure_optimizers(self):
-        if self.args.gpus > 0:
+        if self.args.gpus > 0 and self.args.tpus == 0:
             from apex.optimizers import FusedAdam, FusedSGD
         else:
             from torch.optim import Adam as FusedAdam
