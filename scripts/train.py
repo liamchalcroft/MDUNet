@@ -84,9 +84,12 @@ parser.add_argument(
     help="Gradient clipping norm value",
 )
 
+from torch.multiprocessing import set_start_method
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    if args.tpus > 0 and args.gpus > 0:
+        set_start_method("spawn")
     path_to_main = os.path.join(dirname(dirname(os.path.realpath(__file__))), "main.py")
     cmd = f"python {path_to_main} --exec_mode train --task {args.task} --save_ckpt --scheduler "
     cmd += f"--results {args.results} "
