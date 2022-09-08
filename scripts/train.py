@@ -20,7 +20,9 @@ from subprocess import run
 parser = ArgumentParser(ArgumentDefaultsHelpFormatter)
 parser.add_argument("--task", type=str, default="01", help="Path to data")
 parser.add_argument("--gpus", type=int, required=True, help="Number of GPUs")
-parser.add_argument("--tpus", type=int, required=True, help="Number of TPUs")
+parser.add_argument(
+    "--tpus", type=int, default=0, required=False, help="Number of TPUs"
+)
 parser.add_argument(
     "--fold", type=int, required=True, choices=[0, 1, 2, 3, 4], help="Fold number"
 )
