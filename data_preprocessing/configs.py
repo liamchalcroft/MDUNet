@@ -30,7 +30,7 @@ task = {
     "15": "ISLES2022",
     "16": "ATLAS2022_ss",
     "17": "BRATSMIX",
-    "18": "ATLAS2022_big",
+    "18": "ATLAS2022",
 }
 
 patch_size = {
